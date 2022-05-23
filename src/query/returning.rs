@@ -1,4 +1,4 @@
-use crate::{ColumnRef, IntoColumnRef};
+use crate::{ColumnRef, IntoColumnRef, SimpleExpr};
 
 /// RETURNING clause.
 /// ## Note:
@@ -11,6 +11,7 @@ use crate::{ColumnRef, IntoColumnRef};
 pub enum ReturningClause {
     All,
     Columns(Vec<ColumnRef>),
+    Exprs(Vec<SimpleExpr>),
 }
 
 /// Shorthand for constructing [`ReturningClause`]
@@ -44,5 +45,22 @@ impl Returning {
     {
         let cols: Vec<_> = cols.into_iter().map(|c| c.into_column_ref()).collect();
         ReturningClause::Columns(cols)
+    }
+
+    /// Constructs a new [`ReturningClause::Exprs`].
+    pub fn expr<T>(&self, expr: T) -> ReturningClause
+    where
+        T: Into<SimpleExpr>,
+    {
+        ReturningClause::Exprs(vec![expr.into()])
+    }
+
+    /// Constructs a new [`ReturningClause::Exprs`].
+    pub fn exprs<T, I>(self, exprs: I) -> ReturningClause
+    where
+        T: Into<SimpleExpr>,
+        I: IntoIterator<Item = T>,
+    {
+        ReturningClause::Exprs(exprs.into_iter().map(Into::into).collect())
     }
 }
